@@ -3,7 +3,7 @@ import { useEffect, useState, useContext } from "react";
 import { supabase } from "../supabaseClient";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import { ThemeContext } from "../components/ThemeContext";
+
 
 export default function MyResumes() {
   const { darkMode } = useContext(ThemeContext);

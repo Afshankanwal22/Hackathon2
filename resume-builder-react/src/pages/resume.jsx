@@ -1,15 +1,12 @@
 // src/pages/dashboard/ResumeForm.jsx
 
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import Swal from 'sweetalert2';
-import { ThemeContext } from "../components/ThemeContext";
-
 
 export default function ResumeForm({ resumeId }) {
   const navigate = useNavigate();
-  const { darkMode } = useContext(ThemeContext);
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -50,9 +47,11 @@ export default function ResumeForm({ resumeId }) {
     }
   };
 
-  // -------- Save resume with modal confirmation --------
+  // -------- Save resume with confirmation --------
   const handleSave = async () => {
-    const user = (await supabase.auth.getUser()).data.user;
+    const userRes = await supabase.auth.getUser();
+    const user = userRes.data.user;
+
     if (!user) return Swal.fire('Error', 'Please login again', 'error');
 
     // Show confirmation modal
@@ -63,11 +62,11 @@ export default function ResumeForm({ resumeId }) {
       showCancelButton: true,
       confirmButtonText: 'Yes, save it!',
       cancelButtonText: 'Cancel',
-      background: darkMode ? '#1f2937' : '#fff',
-      color: darkMode ? '#fff' : '#000',
+      background: '#fff',
+      color: '#000',
     });
 
-    if (!result.isConfirmed) return; // Exit if canceled
+    if (!result.isConfirmed) return;
 
     setLoading(true);
     let profileUrl = profilePic;
@@ -75,7 +74,7 @@ export default function ResumeForm({ resumeId }) {
     // -------- Upload profile picture if selected --------
     if (profilePic && profilePic instanceof File) {
       const fileName = `${user.id}/${profilePic.name}`;
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('profile-pics')
         .upload(fileName, profilePic, { upsert: true });
 
@@ -89,7 +88,7 @@ export default function ResumeForm({ resumeId }) {
         .from('profile-pics')
         .getPublicUrl(fileName);
 
-      profileUrl = publicUrlData.publicUrl; // ✅ store public URL
+      profileUrl = publicUrlData.publicUrl;
     }
 
     // -------- Prepare payload --------
@@ -122,10 +121,10 @@ export default function ResumeForm({ resumeId }) {
         title: 'Success!',
         text: `Resume ${resumeId ? 'updated' : 'saved'} successfully.`,
         icon: 'success',
-        background: darkMode ? '#1f2937' : '#fff',
-        color: darkMode ? '#fff' : '#000',
+        background: '#fff',
+        color: '#000',
       }).then(() => {
-        navigate('/resumeDashboard'); // Redirect to dashboard
+        navigate('/resumeDashboard');
       });
     }
   };
@@ -133,8 +132,8 @@ export default function ResumeForm({ resumeId }) {
   return (
     <div className="max-w-5xl mx-auto my-10">
       <div className="bg-gradient-to-r from-purple-500 to-blue-500 p-1 rounded-3xl shadow-2xl">
-        <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 backdrop-blur-md">
-          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">
+        <div className="bg-white rounded-3xl p-8 backdrop-blur-md">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
             Resume Builder ✨
           </h2>
 
@@ -143,11 +142,7 @@ export default function ResumeForm({ resumeId }) {
             <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-purple-400 shadow-lg mb-3">
               {profilePic ? (
                 typeof profilePic === 'string' ? (
-                  <img
-                    src={profilePic}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={profilePic} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
                   <img
                     src={URL.createObjectURL(profilePic)}
@@ -156,7 +151,7 @@ export default function ResumeForm({ resumeId }) {
                   />
                 )
               ) : (
-                <div className="flex items-center justify-center w-full h-full bg-gray-200 dark:bg-gray-700 text-gray-500">
+                <div className="flex items-center justify-center w-full h-full bg-gray-200 text-gray-500">
                   No Photo
                 </div>
               )}
@@ -165,7 +160,7 @@ export default function ResumeForm({ resumeId }) {
               type="file"
               accept="image/*"
               onChange={(e) => setProfilePic(e.target.files[0])}
-              className="text-sm text-gray-700 dark:text-gray-200"
+              className="text-sm text-gray-700"
             />
           </div>
 
@@ -249,7 +244,7 @@ export default function ResumeForm({ resumeId }) {
 function Section({ title, children }) {
   return (
     <div className="mb-6">
-      <h3 className="text-xl font-semibold text-purple-700 dark:text-purple-400 mb-3">{title}</h3>
+      <h3 className="text-xl font-semibold text-purple-700 mb-3">{title}</h3>
       {children}
     </div>
   );
@@ -261,8 +256,8 @@ function FancyInput({ placeholder, value, onChange, type = 'text' }) {
       type={type}
       placeholder={placeholder}
       value={value}
-      onChange={e => onChange(e.target.value)}
-      className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-sm dark:bg-gray-800 dark:text-white"
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-sm bg-white text-gray-900"
     />
   );
 }
@@ -272,9 +267,9 @@ function FancyTextarea({ placeholder, value, onChange, rows = 3 }) {
     <textarea
       placeholder={placeholder}
       value={value}
-      onChange={e => onChange(e.target.value)}
+      onChange={(e) => onChange(e.target.value)}
       rows={rows}
-      className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-sm dark:bg-gray-800 dark:text-white"
+      className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-sm bg-white text-gray-900"
     />
   );
 }

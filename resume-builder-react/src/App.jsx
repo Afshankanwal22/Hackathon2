@@ -1,4 +1,4 @@
-import { ThemeProvider } from "./components/ThemeContext";
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from './pages/login.jsx';
 import Signup from './pages/signup.jsx';
@@ -8,7 +8,7 @@ import ResumeView from './pages/ResumeView.jsx';
 
 export default function App() {
   return (
-    <ThemeProvider>
+   
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -19,6 +19,6 @@ export default function App() {
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </Router>
-    </ThemeProvider>
+  
   );
 }
