@@ -1,4 +1,3 @@
-// src/pages/dashboard/ResumeView.jsx
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
@@ -28,7 +27,6 @@ export default function ResumeView() {
       if (error) throw error;
       setResume(data);
     } catch (error) {
-      console.error(error);
       Swal.fire("Error", error.message, "error");
       setResume(null);
     }
@@ -43,27 +41,25 @@ export default function ResumeView() {
   const handleDelete = async () => {
     const result = await Swal.fire({
       title: "Are you sure?",
-      text: "This will permanently delete your resume!",
+      text: "This resume will be permanently deleted.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#2563eb",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
+      confirmButtonText: "Delete",
     });
 
     if (result.isConfirmed) {
       const { error } = await supabase.from("resume").delete().eq("id", resume.id);
       if (error) Swal.fire("Error", error.message, "error");
       else {
-        Swal.fire("Deleted!", "Your resume has been deleted.", "success");
+        Swal.fire("Deleted!", "Resume deleted successfully.", "success");
         navigate("/resumeDashboard");
       }
     }
   };
 
   const handleSave = async () => {
-    if (!editingResume) return;
-
     const { full_name, email, phone, summary, education, experience, skills, projects, languages } = editingResume;
 
     const { error } = await supabase
@@ -73,149 +69,148 @@ export default function ResumeView() {
 
     if (error) Swal.fire("Error", error.message, "error");
     else {
-      Swal.fire({
-        title: "Success",
-        text: "Resume updated successfully!",
-        icon: "success",
-      });
+      Swal.fire("Success", "Resume updated successfully!", "success");
       setModalOpen(false);
       fetchResume();
     }
   };
 
-  if (loading) return <p className="text-center mt-10 text-gray-500">Loading resume...</p>;
-  if (!resume) return <p className="text-center mt-10 text-gray-500">Resume not found.</p>;
+  if (loading) return <p className="text-center mt-10">Loading...</p>;
+  if (!resume) return <p className="text-center mt-10">Resume not found.</p>;
 
   return (
-    <div className="max-w-4xl mx-auto my-10 bg-white rounded-xl shadow-lg p-8">
-      {/* Back Button */}
-      <button
-        onClick={() => navigate("/resumeDashboard")}
-        className="mb-6 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-all"
-      >
-        ← Back to Dashboard
-      </button>
+    <div className="max-w-5xl mx-auto my-10 bg-white p-10 shadow-md rounded-lg font-sans">
 
-      {/* Profile */}
-      <div className="flex flex-col items-center mb-6">
-        <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-gray-300 shadow-sm mb-3">
-          {resume.profilepics ? (
-            <img src={resume.profilepics} alt={resume.full_name} className="w-full h-full object-cover" />
-          ) : (
-            <div className="flex items-center justify-center w-full h-full bg-gray-200 text-gray-500">
-              No Photo
-            </div>
-          )}
-        </div>
-        <h2 className="text-3xl font-bold text-gray-900">{resume.full_name}</h2>
-        <p className="text-gray-500">{resume.email} | {resume.phone}</p>
-      </div>
+      {/* HEADER */}
+      <div className="flex justify-between items-start border-b pb-6 mb-8">
+        <h1 className="text-4xl font-bold text-gray-900">
+          {resume.full_name}
+        </h1>
 
-      {/* Sections */}
-      <Section title="Profile Summary">{resume.summary}</Section>
-      <Section title="Education">{resume.education}</Section>
-      <Section title="Work Experience">{resume.experience}</Section>
-      <Section title="Skills">{resume.skills}</Section>
-      <Section title="Projects & Certifications">{resume.projects}</Section>
-      <Section title="Languages">{resume.languages}</Section>
-
-      {/* Edit/Delete Buttons */}
-      <div className="mt-8 flex justify-center space-x-4">
         <button
-          onClick={handleEdit}
-          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow font-medium transition"
+          onClick={() => navigate("/resumeDashboard")}
+          className="no-print text-sm bg-gray-100 px-4 py-2 rounded hover:bg-gray-200"
         >
-          ✏️ Edit Resume
-        </button>
-        <button
-          onClick={handleDelete}
-          className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow font-medium transition"
-        >
-          🗑️ Delete Resume
+          ← Dashboard
         </button>
       </div>
 
-      {/* Edit Modal */}
-      {modalOpen && editingResume && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-2xl overflow-y-auto max-h-[90vh]">
-            <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-3">
-              <h3 className="text-2xl font-bold text-gray-800">Edit Resume</h3>
+      {/* BODY */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+
+        {/* LEFT */}
+        <aside className="md:col-span-1 border-r pr-6">
+
+          <div className="flex justify-center mb-6">
+            <div className="w-32 h-32 rounded-full overflow-hidden border">
+              {resume.profilepics ? (
+                <img src={resume.profilepics} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <div className="bg-gray-200 w-full h-full flex items-center justify-center text-sm text-gray-500">
+                  No Photo
+                </div>
+              )}
+            </div>
+          </div>
+
+          <CVSection title="Contact">
+            <p><b>Email:</b> {resume.email}</p>
+            <p><b>Phone:</b> {resume.phone}</p>
+          </CVSection>
+
+          <CVSection title="Skills">
+            {resume.skills}
+          </CVSection>
+
+          <CVSection title="Languages">
+            {resume.languages}
+          </CVSection>
+        </aside>
+
+        {/* RIGHT */}
+        <main className="md:col-span-2 space-y-8">
+
+          <CVSection title="Profile Summary">
+            {resume.summary}
+          </CVSection>
+
+          <CVSection title="Education">
+            {resume.education}
+          </CVSection>
+
+          <CVSection title="Work Experience">
+            {resume.experience}
+          </CVSection>
+
+          <CVSection title="Projects & Certifications">
+            {resume.projects}
+          </CVSection>
+
+          {/* ACTION BUTTONS */}
+          <div className="pt-6 flex gap-4 no-print">
+            <button
+              onClick={handleEdit}
+              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+            >
+              Edit
+            </button>
+
+            <button
+              onClick={handleDelete}
+              className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700"
+            >
+              Delete
+            </button>
+
+            <button
+              onClick={() => window.print()}
+              className="bg-gray-900 text-white px-6 py-2 rounded hover:bg-black"
+            >
+              Download Resume
+            </button>
+          </div>
+
+        </main>
+      </div>
+
+      {/* EDIT MODAL */}
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 no-print">
+          <div className="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold mb-4">Edit Resume</h2>
+
+            <Input label="Full Name" value={editingResume.full_name}
+              onChange={(v) => setEditingResume({ ...editingResume, full_name: v })} />
+            <Input label="Email" value={editingResume.email}
+              onChange={(v) => setEditingResume({ ...editingResume, email: v })} />
+            <Input label="Phone" value={editingResume.phone}
+              onChange={(v) => setEditingResume({ ...editingResume, phone: v })} />
+
+            <Textarea label="Summary" value={editingResume.summary}
+              onChange={(v) => setEditingResume({ ...editingResume, summary: v })} />
+            <Textarea label="Education" value={editingResume.education}
+              onChange={(v) => setEditingResume({ ...editingResume, education: v })} />
+            <Textarea label="Experience" value={editingResume.experience}
+              onChange={(v) => setEditingResume({ ...editingResume, experience: v })} />
+            <Textarea label="Skills" value={editingResume.skills}
+              onChange={(v) => setEditingResume({ ...editingResume, skills: v })} />
+            <Textarea label="Projects" value={editingResume.projects}
+              onChange={(v) => setEditingResume({ ...editingResume, projects: v })} />
+            <Textarea label="Languages" value={editingResume.languages}
+              onChange={(v) => setEditingResume({ ...editingResume, languages: v })} />
+
+            <div className="flex justify-end gap-3 mt-4">
               <button
                 onClick={() => setModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700 font-bold text-xl"
-              >
-                ✖
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField
-                label="Full Name"
-                value={editingResume.full_name}
-                onChange={(val) => setEditingResume({ ...editingResume, full_name: val })}
-              />
-              <InputField
-                label="Email"
-                type="email"
-                value={editingResume.email}
-                onChange={(val) => setEditingResume({ ...editingResume, email: val })}
-              />
-              <InputField
-                label="Phone"
-                value={editingResume.phone}
-                onChange={(val) => setEditingResume({ ...editingResume, phone: val })}
-              />
-              <InputField
-                label="Skills"
-                value={editingResume.skills}
-                onChange={(val) => setEditingResume({ ...editingResume, skills: val })}
-              />
-            </div>
-
-            <TextAreaField
-              label="Summary"
-              value={editingResume.summary}
-              onChange={(val) => setEditingResume({ ...editingResume, summary: val })}
-              rows={3}
-            />
-            <TextAreaField
-              label="Education"
-              value={editingResume.education}
-              onChange={(val) => setEditingResume({ ...editingResume, education: val })}
-              rows={3}
-            />
-            <TextAreaField
-              label="Experience"
-              value={editingResume.experience}
-              onChange={(val) => setEditingResume({ ...editingResume, experience: val })}
-              rows={3}
-            />
-            <TextAreaField
-              label="Projects & Certifications"
-              value={editingResume.projects}
-              onChange={(val) => setEditingResume({ ...editingResume, projects: val })}
-              rows={3}
-            />
-            <TextAreaField
-              label="Languages"
-              value={editingResume.languages}
-              onChange={(val) => setEditingResume({ ...editingResume, languages: val })}
-              rows={2}
-            />
-
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                onClick={() => setModalOpen(false)}
-                className="px-5 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium transition"
+                className="px-4 py-2 bg-gray-200 rounded"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
-                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow transition"
+                className="px-4 py-2 bg-blue-600 text-white rounded"
               >
-                Save Changes
+                Save
               </button>
             </div>
           </div>
@@ -225,39 +220,43 @@ export default function ResumeView() {
   );
 }
 
-// Reusable Components
-function Section({ title, children }) {
+/* COMPONENTS */
+
+function CVSection({ title, children }) {
   return (
     <div className="mb-6">
-      <h3 className="text-xl font-semibold text-gray-800 mb-2">{title}</h3>
-      <p className="text-gray-700">{children || "N/A"}</p>
+      <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-2">
+        {title}
+      </h3>
+      <p className="text-gray-800 text-sm leading-relaxed">
+        {children || "N/A"}
+      </p>
     </div>
   );
 }
 
-function InputField({ label, value, onChange, type = "text" }) {
+function Input({ label, value, onChange }) {
   return (
-    <div className="flex flex-col">
-      <label className="text-gray-700 font-medium mb-1">{label}</label>
+    <div className="mb-3">
+      <label className="block text-sm font-medium mb-1">{label}</label>
       <input
-        type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+        className="w-full border px-3 py-2 rounded"
       />
     </div>
   );
 }
 
-function TextAreaField({ label, value, onChange, rows = 3 }) {
+function Textarea({ label, value, onChange }) {
   return (
-    <div className="flex flex-col mt-2">
-      <label className="text-gray-700 font-medium mb-1">{label}</label>
+    <div className="mb-3">
+      <label className="block text-sm font-medium mb-1">{label}</label>
       <textarea
+        rows={3}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        rows={rows}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+        className="w-full border px-3 py-2 rounded"
       />
     </div>
   );
