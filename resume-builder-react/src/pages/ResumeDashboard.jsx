@@ -112,7 +112,7 @@ export default function ResumeDashboard() {
         ) : resumes.length === 0 ? (
           <div className="text-center text-gray-500">No resumes found.</div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 justify-center">
             {resumes.map((resume) => (
               <ResumeCard key={resume.id} resume={resume} navigate={navigate} />
             ))}
@@ -132,7 +132,7 @@ function ResumeCard({ resume, navigate }) {
   const profilePicUrl = resume.profilepics || null;
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden transform hover:scale-105 transition-all duration-200 border border-purple-200 hover:border-purple-400 max-w-sm mx-auto">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden transform hover:scale-105 transition-all duration-200 border border-purple-200 hover:border-purple-400 w-full">
       {/* PROFILE PICTURE */}
       <div className="w-full h-40 bg-purple-50 dark:bg-purple-900 flex items-center justify-center">
         {profilePicUrl ? (

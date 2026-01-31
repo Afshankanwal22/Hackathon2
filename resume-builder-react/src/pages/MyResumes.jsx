@@ -3,7 +3,7 @@ import { useEffect, useState, useContext } from "react";
 import { supabase } from "../supabaseClient";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-
+import { ThemeContext } from "../context/ThemeContext";
 
 export default function MyResumes() {
   const { darkMode } = useContext(ThemeContext);
@@ -21,6 +21,7 @@ export default function MyResumes() {
     setLoading(true);
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
+
     if (!user) {
       Swal.fire("Error", "Please login again", "error");
       navigate("/login");
@@ -34,6 +35,7 @@ export default function MyResumes() {
 
     if (error) Swal.fire("Error", error.message, "error");
     else setResumes(data || []);
+
     setLoading(false);
   };
 
@@ -43,94 +45,93 @@ export default function MyResumes() {
   };
 
   const handleDelete = async (id) => {
-    const result = await Swal.fire({
-      title: "Are you sure?",
-      text: "This will permanently delete your resume!",
+    const res = await Swal.fire({
+      title: "Delete Resume?",
+      text: "This action cannot be undone",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#6b21a8",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-      background: darkMode ? "#1f2937" : "#fff",
+      cancelButtonColor: "#dc2626",
+      background: darkMode ? "#111827" : "#fff",
       color: darkMode ? "#fff" : "#000",
     });
 
-    if (result.isConfirmed) {
+    if (res.isConfirmed) {
       const { error } = await supabase.from("resume").delete().eq("id", id);
-      if (error) Swal.fire("Error", error.message, "error");
-      else {
-        Swal.fire("Deleted!", "Your resume has been deleted.", "success");
-        fetchResumes();
-      }
+      if (!error) fetchResumes();
     }
   };
 
   const handleSave = async () => {
-    if (!editingResume) return;
-    const { id, full_name, email, phone, summary, education, experience, skills, projects, languages } = editingResume;
-
+    const { id, ...payload } = editingResume;
     const { error } = await supabase
       .from("resume")
-      .update({ full_name, email, phone, summary, education, experience, skills, projects, languages })
+      .update(payload)
       .eq("id", id);
 
-    if (error) Swal.fire("Error", error.message, "error");
-    else {
-      Swal.fire({
-        title: "Success",
-        text: "Resume updated successfully!",
-        icon: "success",
-        background: darkMode ? "#1f2937" : "#fff",
-        color: darkMode ? "#fff" : "#000",
-      });
+    if (!error) {
+      Swal.fire("Updated", "Resume updated successfully", "success");
       setModalOpen(false);
       fetchResumes();
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto my-10 px-4">
-      <h2 className="text-4xl font-bold text-purple-700 mb-8 text-center">My Resumes</h2>
+    <div className="max-w-7xl mx-auto my-6 px-2">
+      <h2 className="text-3xl font-bold text-purple-700 mb-5 text-center">
+        My Resumes
+      </h2>
 
       {loading ? (
-        <p className="text-center text-gray-500">Loading resumes...</p>
+        <p className="text-center">Loading...</p>
       ) : resumes.length === 0 ? (
-        <p className="text-center text-gray-500">You have no resumes yet.</p>
+        <p className="text-center text-gray-500">No resumes found</p>
       ) : (
-        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        /* 🔥 ULTRA COMPACT GRID */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[3px]">
           {resumes.map((resume) => (
             <div
               key={resume.id}
-              className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-6 flex flex-col items-center transition-transform transform hover:scale-105"
+              className="bg-white dark:bg-gray-900 rounded-xl shadow-md p-3 flex flex-col items-center"
             >
-              {/* Profile */}
-              <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-purple-400 shadow-lg mb-3">
+              {/* Image */}
+              <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-purple-500 mb-2">
                 {resume.profilepics ? (
-                  <img src={resume.profilepics} alt={resume.full_name} className="w-full h-full object-cover" />
+                  <img
+                    src={resume.profilepics}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500">
+                  <div className="w-full h-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center text-xs">
                     No Photo
                   </div>
                 )}
               </div>
 
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{resume.full_name}</h3>
-              <p className="text-gray-600 dark:text-gray-300 text-sm">{resume.email}</p>
-              <p className="text-gray-600 dark:text-gray-300 text-sm">{resume.phone}</p>
+              <h3 className="text-sm font-semibold dark:text-white">
+                {resume.full_name}
+              </h3>
+              <p className="text-xs text-gray-600 dark:text-gray-300">
+                {resume.email}
+              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-300">
+                {resume.phone}
+              </p>
 
-              {/* Edit/Delete Buttons */}
-              <div className="mt-6 w-full flex justify-between">
+              {/* Buttons */}
+              <div className="mt-2 w-full flex gap-1">
                 <button
                   onClick={() => handleEdit(resume)}
-                  className="w-1/2 mr-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg shadow font-semibold flex items-center justify-center"
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-1.5 rounded-md text-xs"
                 >
-                  ✏️ Edit
+                  Edit
                 </button>
                 <button
                   onClick={() => handleDelete(resume.id)}
-                  className="w-1/2 ml-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow font-semibold flex items-center justify-center"
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white py-1.5 rounded-md text-xs"
                 >
-                  🗑️ Delete
+                  Delete
                 </button>
               </div>
             </div>
@@ -138,77 +139,63 @@ export default function MyResumes() {
         </div>
       )}
 
-      {/* Edit Modal */}
+      {/* EDIT MODAL */}
       {modalOpen && editingResume && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-6 w-full max-w-2xl overflow-y-auto max-h-[90vh]">
-            <h3 className="text-2xl font-bold text-purple-700 dark:text-purple-400 mb-4">Edit Resume</h3>
+        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-4xl p-5 rounded-xl">
+            <h3 className="text-xl font-bold text-purple-600 mb-3">
+              Edit Resume
+            </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <Input
                 label="Full Name"
                 value={editingResume.full_name}
-                onChange={(val) => setEditingResume({ ...editingResume, full_name: val })}
+                onChange={(v) =>
+                  setEditingResume({ ...editingResume, full_name: v })
+                }
               />
-              <InputField
+              <Input
                 label="Email"
-                type="email"
                 value={editingResume.email}
-                onChange={(val) => setEditingResume({ ...editingResume, email: val })}
+                onChange={(v) =>
+                  setEditingResume({ ...editingResume, email: v })
+                }
               />
-              <InputField
+              <Input
                 label="Phone"
                 value={editingResume.phone}
-                onChange={(val) => setEditingResume({ ...editingResume, phone: val })}
+                onChange={(v) =>
+                  setEditingResume({ ...editingResume, phone: v })
+                }
               />
-              <InputField
-                label="Skills (comma separated)"
+              <Input
+                label="Skills"
                 value={editingResume.skills}
-                onChange={(val) => setEditingResume({ ...editingResume, skills: val })}
+                onChange={(v) =>
+                  setEditingResume({ ...editingResume, skills: v })
+                }
               />
             </div>
 
-            <TextAreaField
+            <Textarea
               label="Summary"
               value={editingResume.summary}
-              onChange={(val) => setEditingResume({ ...editingResume, summary: val })}
-              rows={3}
-            />
-            <TextAreaField
-              label="Education"
-              value={editingResume.education}
-              onChange={(val) => setEditingResume({ ...editingResume, education: val })}
-              rows={3}
-            />
-            <TextAreaField
-              label="Experience"
-              value={editingResume.experience}
-              onChange={(val) => setEditingResume({ ...editingResume, experience: val })}
-              rows={3}
-            />
-            <TextAreaField
-              label="Projects & Certifications"
-              value={editingResume.projects}
-              onChange={(val) => setEditingResume({ ...editingResume, projects: val })}
-              rows={3}
-            />
-            <TextAreaField
-              label="Languages"
-              value={editingResume.languages}
-              onChange={(val) => setEditingResume({ ...editingResume, languages: val })}
-              rows={2}
+              onChange={(v) =>
+                setEditingResume({ ...editingResume, summary: v })
+              }
             />
 
-            <div className="mt-6 flex justify-end space-x-3">
+            <div className="mt-3 flex justify-end gap-2">
               <button
                 onClick={() => setModalOpen(false)}
-                className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 font-semibold"
+                className="px-4 py-2 bg-gray-300 rounded-md"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold"
+                className="px-4 py-2 bg-purple-600 text-white rounded-md"
               >
                 Save
               </button>
@@ -220,30 +207,29 @@ export default function MyResumes() {
   );
 }
 
-// Reusable Input Components
-function InputField({ label, value, onChange, type = "text" }) {
+/* COMPONENTS */
+function Input({ label, value, onChange }) {
   return (
     <div className="flex flex-col">
-      <label className="text-gray-700 dark:text-gray-200 font-medium mb-1">{label}</label>
+      <label className="text-xs mb-0.5">{label}</label>
       <input
-        type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-400 dark:bg-gray-800 dark:text-white"
+        className="px-2 py-1.5 border rounded-md text-sm dark:bg-gray-800 dark:text-white"
       />
     </div>
   );
 }
 
-function TextAreaField({ label, value, onChange, rows = 3 }) {
+function Textarea({ label, value, onChange }) {
   return (
-    <div className="flex flex-col mt-2">
-      <label className="text-gray-700 dark:text-gray-200 font-medium mb-1">{label}</label>
+    <div className="flex flex-col mt-1">
+      <label className="text-xs mb-0.5">{label}</label>
       <textarea
+        rows={3}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        rows={rows}
-        className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-400 dark:bg-gray-800 dark:text-white"
+        className="px-2 py-1.5 border rounded-md text-sm dark:bg-gray-800 dark:text-white"
       />
     </div>
   );
